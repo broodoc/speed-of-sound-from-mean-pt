@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<job simulateSubmission="false" maxFilesPerProcess="200" fileListSyntax="xrootd">
+<command>
+setenv NODEBUG yes
+stardev
+root4star -b -q -l 'runAnalysis.C(true, "_200p0_COL", "'$FILELIST'", "output.'${JOBID}'.root")'
+</command>
+<SandBox installer="ZIP">   
+        <Package>
+            <File>file:./runAnalysis.C</File>
+            <File>file:./StRoot</File>  
+            <File>file:./.sl73_gcc485</File>
+        </Package>
+</SandBox>
+
+<stdout URL="file:./JobLogs/sched$JOBID.out"/>
+<stderr URL="file:./JobLogs/sched$JOBID.err"/>
+
+<!-- Real Data -->
+<!-- Don't forget to change setting above as well-->
+<!--<input URL="catalog:star.bnl.gov?filetype=daq_reco_picoDst,trgsetupname=production_3p85GeV_fixedTarget_2018,production=P19ie,library=SL20d,tpx=1,filename~st_physics,sanity=1,storage!=hpss" preferStorage="local" singleCopy="true" nFiles="all" />-->
+<!--<input URL="catalog:star.bnl.gov?filetype=daq_reco_picoDst,trgsetupname=production_4p59GeV_fixedTarget_2019,production=P21id,library=SL21d,tpx=1,filename~st_physics,sanity=1,storage!=hpss" preferStorage="local" singleCopy="true" nFiles="all" />-->
+<!--<input URL="catalog:star.bnl.gov?filetype=daq_reco_picoDst,trgsetupname=production_5p75GeV_fixedTarget_2020,production=P21id,library=SL21d,tpx=1,filename~st_physics,sanity=1,storage!=hpss" preferStorage="local" singleCopy="true" nFiles="all" />-->
+<!--<input URL="catalog:star.bnl.gov?filetype=daq_reco_picoDst,trgsetupname=production_7p3GeV_fixedTarget_2020,production=P21id,library=SL21d,tpx=1,filename~st_physics,sanity=1,storage!=hpss" preferStorage="local" singleCopy="true" nFiles="all" />-->
+<!--<input URL="catalog:star.bnl.gov?filetype=daq_reco_picoDst,trgsetupname=production_9p8GeV_fixedTarget_2020,production=P21id,library=SL21d,tpx=1,filename~st_physics,sanity=1,storage!=hpss" preferStorage="local" singleCopy="true" nFiles="all" />-->
+<!--<input URL="catalog:star.bnl.gov?filetype=daq_reco_picoDst,trgsetupname=production_31p2GeV_fixedTarget_2020,production=P21id,library=SL21d,tpx=1,filename~st_physics,sanity=1,storage!=hpss" preferStorage="local" singleCopy="true" nFiles="all" />-->
+<!--<input URL="catalog:star.bnl.gov?filetype=daq_reco_picoDst,trgsetupname=production_7p7GeV_2021,production=P22ib,library=SL22b,tpx=1,filename~st_physics,sanity=1,storage!=hpss" preferStorage="local" singleCopy="true" nFiles="all" />-->
+<!--Note: For 200 GeV Run16, did not recognize any library tag listed on: https://www.star.bnl.gov/devcgi/dbProdOptionRetrv.pl. So I removed library -->
+<input URL="catalog:star.bnl.gov?filetype=daq_reco_picoDst,trgsetupname=AuAu_200_production_2016,production=P16ij,tpx=1,filename~st_physics,sanity=1,storage!=hpss" preferStorage="local" singleCopy="true" nFiles="all" />
+<input URL="catalog:star.bnl.gov?filetype=daq_reco_picoDst,trgsetupname=AuAu200_production2_2016,production=P16ij,tpx=1,filename~st_sst,sanity=1,storage!=hpss" preferStorage="local" singleCopy="true" nFiles="all" />
+<input URL="catalog:star.bnl.gov?filetype=daq_reco_picoDst,trgsetupname=AuAu200_production2_2016,production=P16ij,tpx=1,filename~st_nosst,sanity=1,storage!=hpss" preferStorage="local" singleCopy="true" nFiles="all" />
+<!--<input URL="catalog:star.bnl.gov?filetype=daq_reco_picoDst,trgsetupname=AuAu200_production_2011,production=P11id,library=SL19c,tpx=1,filename~st_physics,sanity=1,storage!=hpss" preferStorage="local" singleCopy="true" nFiles="all" />-->
+
+
+<!-- Embedding -->
+<!-- Don't forget to change setting above as well-->
+<!--<input URL="filelist:/star/u/dhevang/multiPionFemto_BES/embedding_3p0.list" /> -->
+<!--<input URL="filelist:/star/u/dhevang/multiPionFemto_BES/embedding_7p7_FXT2019.list" /> -->
+
+<!--<output fromScratch="*.root" toURL="file:/star/data03/pwg/dhevang/" /> -->
+<output fromScratch="*.root" toURL="file:/star/data03/scratch/cbroodo/200GeV/" />
+    <Generator>
+        <Location>/star/data01/pwg/cbroodo/200GeV_Analysis/extra/</Location>
+        <ReportLocation>/star/data01/pwg/cbroodo/200GeV_Analysis/extra/</ReportLocation>
+    </Generator>
+</job>
+
+

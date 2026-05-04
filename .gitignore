@@ -1,0 +1,34 @@
+# macOS/editor noise
+.DS_Store
+._*
+Icon?
+*.swp
+*.swo
+
+# ROOT/C++ build products
+*.o
+*.so
+*.d
+*.pcm
+*.tmp
+*_ACLiC_dict*
+dict_*.cpp
+
+# Analysis outputs and generated data products
+*.root
+prepped_files/
+output/
+outputs/
+results/
+plots/
+farmOutput/
+JobLogs/
+.sl73_gcc485/
+st_phys/
+prod2/
+src/**/yield_errors/
+src/ana_code/other_files/BootstrapYield
+
+# Legacy VCS metadata copied from RCF source trees
+CVS/
+.consign

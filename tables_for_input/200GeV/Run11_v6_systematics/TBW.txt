@@ -1,0 +1,59 @@
+case Function::TBW: {
+            // Tsallis Blast-Wave model (https://arxiv.org/pdf/0812.1609)
+            // par[0] = A (normalization)
+            // par[1] = m (particle mass, GeV) -> TOTAL_CHARGED_MASS
+            // par[2] = T (temperature, GeV)
+            // par[3] = q (nonextensivity parameter, q > 1)
+            // par[4] = beta_s (surface flow velocity)
+
+            const double A      = par[0];
+            const double m      = par[1];
+            const double T      = par[2];
+            const double q      = par[3];
+            const double beta_s = par[4];
+            const double pT     = x[0];
+            if (T <= 0.0 || q <= 1.0 || beta_s < 0.0 || beta_s >= 1.0) return 0.0;
+
+            // ----- TBW integrand -----
+            const int n_r   = 24;
+            const int n_phi = 36;
+            const int n_y   = 24;
+            const double R  = 1.0;
+            const double dr   = R / n_r;
+            const double dphi = 2.0 * TMath::Pi() / n_phi;
+            const double Ywin = 0.10; // rapidity half-window: integrates y ∈ [-Ywin, +Ywin]
+            const double dy   = (2.0 * Ywin) / n_y;
+
+            const double mT = std::sqrt(pT * pT + m * m);
+            double sum = 0.0;
+
+            for (int ir = 0; ir < n_r; ++ir) {
+                const double r  = (ir + 0.5) * dr;
+                const double br = beta_s * (r / R);
+                if (br >= 0.999999) continue;
+                const double rho = std::atanh(br);
+
+                for (int ip = 0; ip < n_phi; ++ip) {
+                    const double phi = -TMath::Pi() + (ip + 0.5) * dphi;
+                    const double cosphi = std::cos(phi);
+
+                    for (int iy = 0; iy < n_y; ++iy) {
+                        const double y   = -Ywin + (iy + 0.5) * dy;
+                        const double cy  = std::cosh(y);
+
+                        const double expo = (mT * cy * std::cosh(rho)
+                                           - pT * std::sinh(rho) * cosphi) / T;
+                        const double base = 1.0 + (q - 1.0) * expo;
+                        if (base <= 0.0) continue;
+
+                        const double weight = std::pow(base, -1.0 / (q - 1.0));
+                        sum += r * cy * weight;
+                    }
+                }
+            }
+
+            const double shape = mT * sum * dr * dphi * dy;
+//            std::cout << "A * shape: " << A * shape << std::endl;
+            return A * shape;
+            break;
+        }

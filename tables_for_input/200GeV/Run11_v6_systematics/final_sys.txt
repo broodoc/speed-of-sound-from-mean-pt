@@ -1,0 +1,26 @@
+Different from https://drupal.star.bnl.gov/STAR/system/files/cbroodo_200GeV_SOS_10_09_25.pdf b/c this time (below), I used spectra (which was more accurate representation of the fits) instead of 1/p_{T} and also folded in other fit functions (ExpDecay and TBW). In the future, I will need to use 1/p_{T} normalization for Lorentz contraction effects (or lack thereof) as we go down in collision energy (but we can see how drastically the result changes once we get to that point).
+
+Fit function variation (chi2ndf is the speed of sound fit chi2ndf unless otherwise stated) Nov 3, 2025 afternoon:
+From Hagedorn: 0.1312 \pm 0.031720 (chi2ndf = 0.17, 0 < pt < 1.15 GeV/c)-> 0.16292
+From Lévy-Tsallis: 0.1267 \pm 0.034060 (chi2ndf = 0.05, 0 < pt < 1.15 GeV/c) -> 0.16076, 0.09264
+From Exp-Decay: 0.1161 \pm 0.027151 (chi2ndf = 0.15, 0 < pt < 0.55 GeV/c) -> 0.088949
+From TBW: 0.0920 \pm 0.021961 (chi2ndf = 0.01, 0 < pt < 0.40 GeV/c) (Ignoring) -> 0.070039
+So |0.16292 - 0.16076| = 0.00216 and |0.09264 - 0.088949| = 0.003691
+Therefore, Max(Variation) = 0.003691
+So, Lévy-Tsallis (w/o sys. Uncertainty on data points from DCA, Vz, and NhitsFit): 0.1267 \pm 0.03360 (so max variation w/ and w/o data point sys' is 0.034060 - 0.03360 = 0.00046 (0.00046 + 0.003691 = 0.004151)
+
+Final quotable value: 
+$c_s^{2} = 0.1267 \pm 0.03360 \pm 0.004151 \in (0.088949, 0.164451)$
+Approximation quotable value:
+$c_s^{2} \approx 0.127 \pm 0.0336 \pm 0.0041 = (0.089, 0.164)$
+Hanwen study quotable value:
+$c_s^{2} 0.141 ± 0.0019 ± 0.018 = (0.138, 0.144)$
+
+
+Older results (Nov 3, morning): 
+From Hagedorn: 0.1290 \pm 0.015976 (chi2ndf < 1, 0 < pt < 1.15 GeV/c)
+From Lévy-Tsallis: 0.1290 \pm 0.011562 (chi2ndf < 1, 0 < pt < 1.15 GeV/c)
+From Exp-Decay: 0.1090 \pm 0.007109 (chi2ndf < 1, 0 < pt < 0.60 GeV/c)
+From Exp-Decay: 0.1108 \pm 0.006753 (chi2ndf ~ 1-3, 0 < pt < 1.10 GeV/c)
+From Exp-Decay: ~0.15 (chi2ndf >> 1 for sos fit and chi2ndf >> 1 for pt fits, 0 < pt < 1.15 GeV/c)
+From TBW: 0.0923 \pm 0.006472 (chi2ndf ~ 1-3, 0 < pt < 1.15 GeV/c)

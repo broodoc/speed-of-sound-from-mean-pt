@@ -1,0 +1,97 @@
+#include "TFile.h"
+#include "TStyle.h"
+#include "TString.h"
+#include <TH1.h>
+#include <TH2.h>
+#include "TLatex.h"
+#include <TCanvas.h>
+#include <TStyle.h>
+#include <vector>
+#include <string>
+#include <cmath>
+#include <cstdlib>
+#include <random>
+#include "TRandom.h"
+#include <TError.h>
+#include <TGraph.h>
+#include <TMath.h>
+#include <TTree.h>
+#include <TLine.h>
+#include <TGraphErrors.h>
+#include "Parameterization.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+
+void Bootstrap_Yield(string system = "AuAu_200");
+
+void Bootstrap_Yield(string system = "AuAu_200"){
+    Parameterization per{};
+    per.SetSystem(system);
+    per.SetMultEstimator("TPC");
+    
+    std::string directory =
+    "/Users/calebbroodo/Desktop/200GeV_Run16/Analysis/DST_Summary_Files/Coarse_Study/Jan_5_2025/Merged/";
+    
+    std::vector<std::string> filenames = {
+        "merged_1.root",
+        "merged_2.root",
+        "merged_3.root",
+        "merged_4.root",
+        "merged_5.root",
+        "merged_6.root",
+        "merged_7.root",
+        "merged_8.root",
+        "merged_9.root",
+        "merged_10.root"
+    };
+    
+    TList* lOut = new TList();
+    lOut->SetOwner(true);
+    
+    int m_index{0};
+    // Loop for all #'s
+    for (const auto& filename : filenames) {
+        m_index++;
+        std::string fullFilename = directory + filename;
+        std::ifstream infile(fullFilename);
+        
+        TFile *file = TFile::Open(fullFilename.c_str(), "READ");
+        
+        int nperc_bins{per.GetnFinePercentileBinning()};
+        // Loop for all centrality indices:
+        for (int k = 0; k < nperc_bins; k++) {
+            //if (debug) {cout << "Fitting for " << Form("hpt_binindex_%d", k) << "...\n";}
+            TH2D* hPt_Nch =  (TH2D*)file->Get("dEta1p0__pTlow0p20_hPt_Nch");
+            //name hpt based on # and y's
+            TH1D* hpt = hPt_Nch->ProjectionY(Form("#%d: %.2f-%.2f%%",
+                                                  m_index,
+                                                  per.GetFineAmplitudeCutLow(k)*100,
+                                                  per.GetFineAmplitudeCutHigh(k)*100),
+                                                  per.GetFineAmplitudeBinCutLow(k),
+                                                  per.GetFineAmplitudeBinCutHigh(k));
+            lOut->Add(hpt);
+            
+                   // Step 1: Store bin content and bin center values in a 2D array
+                   std::vector<std::pair<double, double>> binData; // Pair of (bin center, bin content)
+                   for (int i = 1; i <= hpt->GetNbinsX(); i++) {
+                       double binCenter = hpt->GetBinCenter(i);
+                       double binContent = hpt->GetBinContent(i);
+                       binData.emplace_back(binCenter, binContent);
+                   }
+        }
+        
+    }
+    
+    TFile* fOut = new TFile("differential_yeilds.root","recreate");
+    
+    fOut->Write();
+    fOut->cd();
+    lOut->Write();
+    delete fOut;
+    delete lOut;
+    gROOT->SetBatch(kFALSE);
+    
+}

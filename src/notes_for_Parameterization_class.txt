@@ -1,0 +1,404 @@
+
+PARAMETERIZATION CLASS FUNCTION GLOSSARY 
+(Not in alphabetical order, in the order that the functions appear in the Parameterization.cpp file)
+
+//NOTE: 9/15 - NormalizebyBinWidth function: I added pT normalization (by center)
+//      9/15 - Changed hpT_ref from 0-5% to MB to compare to PID curves
+
+//-------------------------------------------------------------------------
+
+void Parameterization::FindPercentiles(TH1 *hin,PercFirstBin startBin, bool debug, bool isCoarseBinning)
+    EVENTUALLY NEED to use definition from event shuffling from Govert Nijs (maincollect.cpp in Trajectum?) to get exact centrality bin cuts (decimal, not estimated integer cuts). ALICE has more statistics so they can afford to get away with approximating centrality via integers.
+    NEED to make sure the number of bins (nCentralFinePercentileBinning) defined in Parameterization.h correctly matches the number of elements in the referenced array (CentralFinePercentileBinning)! Otherwise centrality definition will be off
+    NEED TO PERFORM GLAUBER FIT TO hin FOR EVENT SELECTION (THIS WILL AVOID PILEUP - WHEN THE TPC MISIDENTIFIES EVENTS THAT HAPPEN CLOSE TO EACH OTHER AS HIGHLY CENTRAL EVENT) AND THEN PERFORM THE REST OF FINDPERCENTILES WITH A GLAUBER TH1
+    
+
+//-------------------------------------------------------------------------
+
+double Parameterization::operator()(double *x, double *par)
+  Fit functions (largely thermal-like) used to extrapolate pT down to 0 on the pT spectra 
+
+//-----------------------------------------------------
+
+Double_t Parameterization::RightKneeFunction(Double_t *x, Double_t *par)
+  Polynomial function that incorporates the dynamics of the <pT> right of the knee (exponential)
+    // p_0 = par[0]
+    // p_1 (cs2) = par[1]
+    // p_0^(p_1) = p_0^(cs2)
+//    return TMath::Power(xx, par[0]);
+//    return par[0] * TMath::Power(xx, par[1]);
+
+//-----------------------------------------------------
+
+TF1* Parameterization::GetFit(TH1 *h)
+  Performs fit for the pT spectra (to extrapolate pT -> 0) 
+//    h->GetXaxis()->SetRangeUser(0, 10);  // Set the fit region of h
+//    Parameterization ExpDecay(Function::ExpDecay);
+//      TF1 *fit = new TF1("fit", ExpDecay, 0.40, 10.0, 3);
+//      fit->SetParameters(250, 20.0, 50.0);  //
+//      fit->SetParLimits(0, 0.1, 300);  // parameter 0 // //
+//      fit->SetParLimits(1, 0.001, 0.1);  // parameter 1 //   //
+//      fit->SetParLimits(2, 0.05, 100.0);  // parameter 1 //   //
+    //-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//        Parameterization PowerLaw(Function::PowerLaw);
+//          TF1 *fit = new TF1("fit", PowerLaw, -0.1, 10.0, 2);
+//          fit->SetParameters(1000, -2.0);  //
+//          fit->SetParLimits(0, 0.1, 5000);  // parameter 0 // //
+//          fit->SetParLimits(1, -100.0, 100.0);  // parameter 1 //   //
+    //-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//    Parameterization Hagedorn(Function::Hagedorn); //Using Hagedorn for pT extrapolation
+//      TF1 *fit = new TF1("fit", Hagedorn, 0, 10.0, 4);
+//      fit->SetParameters(100, 0.01, -70,1.0);
+//      fit->SetParLimits(0, 90, 400);  // parameter 0 // // m - par[0]
+//      fit->SetParLimits(1, 0.05, 50.0);  // parameter 1 //   // pT0 - par[1]
+//      fit->SetParLimits(2, 0.1, 50.0);  // parameter 2 //  // b - par[2]
+//      fit->SetParLimits(3, 0.99, 1.01);  // parameter 3 // // constant - par[3]
+//    fit->SetParameters(10, 0.5, 0.15,60);  //
+//    fit->SetParLimits(0, 0.1, 500);  // parameter 0 // // m - par[0]
+//    fit->SetParLimits(1, 0.05, 5.0);  // parameter 1 //   // pT0 - par[1]
+//    fit->SetParLimits(2, 0.1, 50.0);  // parameter 2 //  // b - par[2]
+//    fit->SetParLimits(3, 250, 1000);  // parameter 3 // // constant - par[3]
+    //-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//    Parameterization Tsallis(Function::Tsallis); //Using Tsallis for pT extrapolation
+//      TF1 *fit = new TF1("fit", Tsallis, -0.1, 3.0, 3);
+//      fit->SetParameters(2e6, 3.50, 0.15);  //
+//      fit->SetParLimits(0, 1e6, 5e6);  // parameter 0 //    V - par[0] (Volume - Tsallis Normalizing factor)
+//      fit->SetParLimits(1, 1.0, 5.0);  // parameter 1 //   // q - par[1] (entropy index)
+//      fit->SetParLimits(2, 0.08, 1.0);  // parameter 2 //     T - par[2] (Effective Temp)
+
+//-----------------------------------------------------
+
+TH1* Parameterization::GetDataFitRatio(TH1 *h, TF1* fit, std::string title){
+  Returns the ratio between the dataset and the fit function (for pT spectra defined in a centrality class specified by "title")
+
+//-----------------------------------------------------
+
+void Parameterization::NormalizeByBinWidth(TH1 *h) {
+  Returns pT spectra histo with all the relevant normalizations (not just bin width... confusingly) except for event normalization. The "content" of each bin is scaled accordingly:
+content = content / ( width * center * 2 * M_PI); // 1/2pi (azimuthal normalization), 1/pT (pT = center, Invariance under Lorentz boost), 1/dpT (dpT = width), differential yield (Rutik/Rene's version)
+
+//-----------------------------------------------------
+
+void Parameterization::UnnormalizeByBinWidth(TH1 *h) {
+   Undoes the normalizations described by NormalizeByBinWidth(TH1 *h)
+
+//-----------------------------------------------------
+
+double Parameterization::GetMean(TH1 *h, TF1 *fit, bool usecut,
+                                 const double &high_cut, const double &low_cut)
+   Returns the <pT> from a given pT spectra using formula described on page 20 of https://arxiv.org/pdf/0809.2482 (Mean). Higher and lower pT cuts can be incorporated to identify different physics. 
+
+//-----------------------------------------------------
+
+double Parameterization::GetdNdEta(TH1 *h, TF1 *fit, bool usecut,
+                                   const double &high_cut, const double &low_cut)
+   Returns the dN/deta from a given pT spectra using formula described on page 20 of https://arxiv.org/pdf/0809.2482 (Integration). Higher and lower pT cuts can be incorporated to identify different physics.
+
+//-----------------------------------------------------
+
+double Parameterization::GetNch(TH1 *h, const int low_ref, const int high_ref)
+   Arguments: Nch_dist,low_ref,high_ref. This function is used for obtaining the mean Nch that corresponds to centrality class from StRefMultCorr (as opposed to getdNdeta which produces the pT-integrated yield. In other words, the analysis produces corresponding Ncharged (not the same as integrating the pT spectra to get dN/deta, this is strictly from the centrality estimator). 
+
+//-----------------------------------------------------
+
+TH1* Parameterization::GetSpectraDifference(TH1 *h, TH1* ref, std::string title)
+   Returns the relative difference between the spectra of a given class h and a reference class ref.
+
+//-----------------------------------------------------
+
+double Parameterization::GetRange(const int k, Parameterization params, bool display)
+    Getter function for Ncharged range (for quantifying centrality resolution eval)
+
+//-----------------------------------------------------
+
+double Parameterization::GetDensity(const int k, Parameterization params)
+    Getter for Ncharged bin density (for centrality resolution eval)
+
+//-----------------------------------------------------
+
+double Parameterization::GetCentrality(const int k, Parameterization params, bool display)
+    Getter for Ncharged bin density (for centrality resolution eval)
+
+//-----------------------------------------------------
+
+double Parameterization::GetErrorMeanpT(const TH1 *h, TF1 *fit, bool usecut,
+                                        const double &cut, bool debug)
+    Returns the statistical uncertainty on the <pT>. Errors are computed from both fit and real data contributions to the <pT>. Note that one needs to perform statistical bootstrap procedure outlined in the Bootstrap_Yield.C file and subsequently set the yield errors (pT spectra bin errors) using SetErrorYield(TH1D*& h, int centrality_index) in order to get relatable errors from this function. Double check that errors for the yield are being computed in concsistent centrality definitions before using SetErrorYield(TH1D*& h, int centrality_index). 
+
+//-----------------------------------------------------
+
+double Parameterization::GetErrordNdEta(const TH1 *h, bool usecut,
+                                        const double &cut, bool debug)
+    Returns the statistical uncertainty on the <dN/deta>. Note that one needs to perform statistical bootstrap procedure outlined in the Bootstrap_Yield.C file and subsequently set the yield errors (pT spectra bin errors) using SetErrorYield(TH1D*& h, int centrality_index) in order to get relatable errors from this function. Double check that errors for the yield are being computed in consistent centrality definitions before using SetErrorYield(TH1D*& h, int centrality_index). Note: Propagate errors (w.r.t. ratio calculations) using formulas described in https://en.wikipedia.org/wiki/Propagation_of_uncertainty and https://arxiv.org/pdf/1609.04150#page24.
+
+//-----------------------------------------------------
+
+void Parameterization::SetErrorYield(TH1D*& h, int centrality_index)
+    Note that one needs to perform statistical bootstrap procedure outlined in the Bootstrap_Yield.C file and subsequently set the yield errors (pT spectra bin errors) using SetErrorYield(TH1D*& h, int centrality_index) in order to get relatable errors from this function. Double check that errors for the yield are being computed in consistent centrality definitions before using SetErrorYield(TH1D*& h, int centrality_index). 
+
+//-----------------------------------------------------
+
+double Parameterization::GetRelativeError(int bin)
+    Returns errors in the centrality definition of the given event fraction (measured %) relative to absolute event fraction (absolute %) 
+
+//-----------------------------------------------------
+
+TH1* Parameterization::GetSpectraRatio(TH1 *h, TH1 *href, TF1 *fit, bool usecut,
+                                       const double &high_cut, const double &low_cut)
+    Returns ratio of spectra in a given class h and reference class href
+
+//-----------------------------------------------------
+
+double Parameterization::P_n(const double* x, const double* par)
+    Polynomial function used in the calculation of Knee parameters ( https://arxiv.org/pdf/1708.00081 )
+
+//-----------------------------------------------------
+
+TH1D* Parameterization::GetKneeParams(TH1D *h, int ref, bool norm, bool fit, bool ratio)
+   Calculates knee parameters ( https://arxiv.org/pdf/1708.00081 )
+
+//-----------------------------------------------------
+
+double Parameterization::f(double n)
+   https://arxiv.org/pdf/1909.11609
+
+TH1D* Parameterization::GetBlackCurve()
+   https://arxiv.org/pdf/1909.11609
+
+TH1D* Parameterization::GetRedCurve()
+   https://arxiv.org/pdf/1909.11609 eq.
+
+TH1D* Parameterization::GetBlueCurve()
+   https://arxiv.org/pdf/1909.11609 eq. (10), Transverse Radius Ratio R/R_0
+
+TH1D* Parameterization::GetOrangeCurve()
+   https://arxiv.org/pdf/1909.11609 eq. (11), entropy density ratio s/s_0
+
+//-----------------------------------------------------
+
+TGraphErrors* Parameterization::GetSoundFit(TGraphErrors* g, double low_cut, double high_cut, TList* outputList)
+    Returns fit function used to calculate the speed of sound
+
+//-----------------------------------------------------
+
+int Parameterization::GetFineAmplitudeBinCutLow(int bin)
+    Returns lower multiplicity/amplitude value for a given index (element in centrality array)
+
+//-----------------------------------------------------
+
+int Parameterization::GetFineAmplitudeBinCutHigh(int bin) const
+    Returns upper multiplicity/amplitude value for a given index (element in centrality array)
+
+//-----------------------------------------------------
+
+float Parameterization::GetCoarseAmplitudeCutHigh(int bin) const 
+    N/A (doesn't get used)
+
+//-----------------------------------------------------
+
+float Parameterization::GetCoarseAmplitudeCutLow(int bin) const
+    N/A (doesn't get used)
+
+//-----------------------------------------------------
+
+float Parameterization::GetFineAmplitudeCutLow(int bin) const
+    Returns the lower percentile value for a given index (element in centrality array)
+
+//-----------------------------------------------------
+
+float Parameterization::GetFineAmplitudeCutHigh(int bin) const
+    Returns the upper percentile value for a given index (element in centrality array)
+
+//-----------------------------------------------------
+
+int Parameterization::GetCoarseAmplitudeBinCutLowMC(int bin) const
+    N/A (doesn't get used). Implements the bin cuts for Ntracklets/Nch to calculate efficiencies. This is included for the SPD Tracklets and TPC Tracks with eta gap, and the Half TPC estimator.
+    
+
+//-----------------------------------------------------
+
+int Parameterization::GetCoarseAmplitudeBinCutHighMC(int bin) const
+    N/A (doesn't get used). Implements the bin cuts for Ntracklets/Nch to calculate efficiencies. This is included for the SPD Tracklets and TPC Tracks with eta gap, and the Half TPC estimator.
+
+//-----------------------------------------------------
+
+int Parameterization::GetCoarseAmplitudeBinCutLow(int bin) const
+    N/A (doesn't get used).
+
+//-----------------------------------------------------
+
+int Parameterization::GetCoarseAmplitudeBinCutHigh(int bin) const
+    N/A (doesn't get used).
+
+
+//-----------------------------------------------------
+const char *Parameterization::GetEstimatorLatex() const
+    N/A (doesn't get used). Returns the latex font for a given estimator. 
+
+//-----------------------------------------------------
+
+int Parameterization::GetnCoarsePercentileBinning() const
+    N/A (doesn't get used).
+
+//-----------------------------------------------------
+
+int Parameterization::GetnFinePercentileBinning() const
+    N/A (doesn't get used). Returns the number of centrality elements used (centrality array defined in header file).
+
+//-----------------------------------------------------
+
+const char *Parameterization::GetFineAmplitudeBinLatex(int bin) const
+    N/A (doesn't get used). Returns the latex font for a given estimator. 
+
+//-----------------------------------------------------
+
+string Parameterization::GetNameInputFile() const 
+    N/A (doesn't get used). Returns the name of the input file used via a given centrality estimator. 
+
+//-----------------------------------------------------
+
+void Parameterization::Ratio_compute_pt_Nch(TH2D* Pt_Nch_hist, TH1D* Nch_dist, bool isCoarseBinning, Parameterization params) {
+    Creates a graph_output.root file complete with <pT>/<pT>_ref vs <dN/deta>/<dN/deta>_ref (one with x-axis defined directly by centrality estimator, the other defined by pT-integrated dN/deta (GetdNdeta() function), <pT> vs <dN/deta>, some QA plots (2D and 1D histos), spectra ratios, centrality ranges, data/fit ratios, and speed of sound calculation
+//    string name = Pt_Nch_hist->GetName();
+//    if (name.length() >= 4) {name.replace(name.length() - 4, 4, "Dec_Run21_from_raw_spectrum");}
+
+TGraphErrors* gRes = new TGraphErrors();
+    gRes->SetName("centrality_bin_range");
+    gRes->GetXaxis()->SetTitle("#LTdN_{ch}/d#eta#GT/#LTdN_{ch}/d#eta#GT_{0-5%}");
+    gRes->GetYaxis()->SetTitle("N_{ch} bin range");
+    TGraphErrors* gCentStRef = new TGraphErrors();
+    gCentStRef->SetName("centrality_StRefMultCorr");
+    gCentStRef->GetXaxis()->SetTitle("100% - centrality (%)");
+    gCentStRef->GetYaxis()->SetTitle("#LTdN/d#eta#GT_{StRefMultCorr}");
+    TGraphErrors* gCentInteg = new TGraphErrors();
+    gCentInteg->SetName("centrality_dN/deta");
+    gCentInteg->GetXaxis()->SetTitle("100% - centrality (%)");
+    gCentInteg->GetYaxis()->SetTitle("#LTdN/d#eta#GT_{p_{T} integrated}");
+    TGraphErrors* gRel = new TGraphErrors();
+    gRel->SetName("centrality_resolution_Nch");
+    gRel->GetXaxis()->SetTitle("#LTdN_{ch}/d#eta#GT / #LTdN_{ch}/d#eta#GT_{0-5%}");
+    gRel->GetYaxis()->SetTitle("Relative Error (|evt %_{Meas} - evt %_{Abs}|/evt %_{Abs}) (%)");
+    TGraphErrors* gRelRange = new TGraphErrors();
+    gRelRange->SetName("centrality_resolution_bin_range");
+    gRelRange->GetXaxis()->SetTitle("N_{ch} bin range");
+    gRelRange->GetYaxis()->SetTitle("Relative Error (|evt %_{Meas} - evt %_{Abs}|/evt %_{Abs}) (%)");
+
+    lOut->Add(gRes);
+    lOut->Add(gCentStRef);
+    lOut->Add(gCentInteg);
+    lOut->Add(gRel);
+    lOut->Add(gRelRange);
+
+
+gRes->SetPoint(k, mean_nch/meannch_ref, params.GetRange(k, params, true));
+//            gCentStRef->SetPoint(k, 100 - params.GetCentrality(k, params, false), mean_nch);
+//            gCentInteg->SetPoint(k, 100 - params.GetCentrality(k, params, false), dndetaAna);
+gRel->SetPoint(k, mean_nch/meannch_ref, 100*params.GetRelativeError(k));
+gRelRange->SetPoint(k, params.GetRange(k, params, false), 100*params.GetRelativeError(k));
+
+if first{
+                lOutSpectra->Add(hpt);
+                lOutSpectra->Add(params.GetSpectraDifference(hpt, hpt_ref, Form("Relative Sp. Diff. ((%.2f-%.2f%%) - (0-5%%))/(0-5%%)",
+                                                                         params.GetFineAmplitudeCutLow(0)*100,
+                                                                         params.GetFineAmplitudeCutHigh(k)*100)));
+                lOutSpectra->Add(params.GetDataFitRatio(hpt, fit, Form("D/F %.2f-%.2f%%",
+                                                                params.GetFineAmplitudeCutLow(0)*100,
+                                                                params.GetFineAmplitudeCutHigh(k)*100)));
+                //            lOut->Add(params.GetDataFitRatio(hpt, fit, Form("D/F %.2f-%.2f%%",
+                //                                                            params.GetFineAmplitudeCutLow(k)*100,
+                //                                                            params.GetFineAmplitudeCutHigh(k)*100)));
+            }
+
+params.SetErrorYield(hpt_ref, 20); //Second argument is centrality index (the ref is stored in the last .txt file in yield_errors/)
+        
+        //    lOut->Add(params.GetKneeParams(Nch_dist, params.GetNch(Nch_dist,low_ref,high_ref), true, false, false));
+        //    lOut->Add(params.GetKneeParams(Nch_dist, params.GetNch(Nch_dist,low_ref,high_ref), true, true, false));
+        //    lOut->Add(params.GetKneeParams(Nch_dist, params.GetNch(Nch_dist,low_ref,high_ref), false, false, false));
+        //    lOut->Add(params.GetKneeParams(Nch_dist, params.GetNch(Nch_dist,low_ref,high_ref), false, false, true));
+        //    lOut->Add(params.GetKneeParams(Nch_dist, params.GetNch(Nch_dist,low_ref,high_ref), true, true, true));
+        
+        //    hpt_ref->Scale(1./params.GetdNdEta(hpt_ref,fit,true,0.20,0));
+        //    lOut->Add(hpt_ref);
+        //    hpt_ref->Scale(params.GetdNdEta(hpt_ref,fit,true,0.20,0));
+
+// -----**-----**-----**-----**-----**--(3) Aux. output --**-----**-----**-----**-----**-----**-----**
+
+            
+            // Spectra ratio ----------// Spectra ratio ----------// Spectra ratio ----------
+            //            hpt_ref->Scale(Nch_dist->Integral(params.GetFineAmplitudeBinCutLow(ref_bin),params.GetFineAmplitudeBinCutHigh(0)));
+            //            hpt->Scale(Nch_dist->Integral(params.GetFineAmplitudeBinCutLow(k),params.GetFineAmplitudeBinCutHigh(k)));
+            //            params.UnnormalizeByBinWidth(hpt_ref);
+            //            params.UnnormalizeByBinWidth(hpt);
+            //            hpt_ref->Scale(1./params.GetdNdEta(hpt_ref,fit,ifpt_cut,0.20,0));
+            //            hpt->Scale(1./params.GetdNdEta(hpt,fit,ifpt_cut,0.20,0));
+            //            hpt_ref->Scale(1./params.GetdNdEta(hpt_ref,fit,ifpt_cut,10.0,0.20));
+            //            hpt->Scale(1./params.GetdNdEta(hpt,fit,ifpt_cut,10.0,0.20));
+            //            TH1* spectra_ratio = params.GetSpectraRatio(hpt, hpt_ref, fit, ifpt_cut, 10.0, 0.20);
+            //            if (params.GetFineAmplitudeCutLow(k) == 0){
+            //                spectra_ratio->SetTitle(Form("0-%.2f%%", params.GetFineAmplitudeCutHigh(k)*100));
+            //            }
+            //            else {
+            //                spectra_ratio->SetTitle(Form("%.2f-%.2f%%", params.GetFineAmplitudeCutLow(k)*100,
+            //                                             params.GetFineAmplitudeCutHigh(k)*100));
+            //            }
+            //            spectra_ratio->SetName(Form("spectra ratio bin index %d (%.3f%%-%.3f%%)", k, params.GetFineAmplitudeCutLow(k)*100,
+            //                params.GetFineAmplitudeCutHigh(k)*100));
+            //            spectra_ratio->SetYTitle("Normalized Spectra Ratio ( % class / ref class )");
+            //            spectra_ratio->GetListOfFunctions()->Clear();
+            //            spectra_ratio->SetLineColor(colors[k % colors.size()]);
+            //            spectra_ratio->SetMarkerColor(colors[k % colors.size()]);
+            //            lOut->Add(spectra_ratio);
+            //            hpt_ref->Scale(1./params.GetdNdEta(hpt_ref,fit,ifpt_cut,0.20,0));
+            //            hpt->Scale(1./params.GetdNdEta(hpt,fit,ifpt_cut,0.20,0));
+            //           hpt_ref->Scale(params.GetdNdEta(hpt_ref,fit,ifpt_cut,10.0,0.20));
+            //            hpt->Scale(params.GetdNdEta(hpt,fit,ifpt_cut,10.0,0.20));
+            //            hpt_ref->Scale(1./Nch_dist->Integral(params.GetFineAmplitudeBinCutLow(ref_bin),params.GetFineAmplitudeBinCutHigh(0)));
+            //            hpt->Scale(1./Nch_dist->Integral(params.GetFineAmplitudeBinCutLow(k),params.GetFineAmplitudeBinCutHigh(k)));
+            //            params.NormalizeByBinWidth(hpt_ref);
+            //            params.NormalizeByBinWidth(hpt);
+            //            hpt_ref->Scale(params.GetdNdEta(hpt_ref,fit,ifpt_cut,10.0,0.20));
+            //            hpt->Scale(params.GetdNdEta(hpt,fit,ifpt_cut,10.0,0.20));
+            //----------//----------//----------//----------//----------//----------//
+
+        
+        /// Vector data acquisition for FINE and COARSE binning:
+        //MAKE SURE TPC BIN CUTS ARE CORRECT (wrong cuts as of now)
+        cout << '\n' << "===================================";
+        cout << "===========================================" << '\n';
+        cout << "\t RATIO PLOT WITH FINE BINNING PROCESSING... " << '\n';
+        nperc_bins = params.GetnFinePercentileBinning();
+        cout << "\t Number of bins: " << nperc_bins << '\n';
+        cout << '\n' << "\t N events (MB): " << Nch_dist->Integral(0,high_ref) << '\n';
+        
+        if (debug) {cout << "\t Low Bin percentiles: ";}
+        for (int i = 0; i < nperc_bins+1; i++){
+            low_perc_bins.push_back(params.GetFineAmplitudeCutLow(i));
+            low_bin_cuts.push_back(params.GetFineAmplitudeBinCutLow(i));
+            if (debug) {cout << low_perc_bins[i]*100 << "%(" << low_bin_cuts[i] << "), ";}
+        }
+        if (debug) {cout << '\n' << "\t High Bin percentiles: ";}
+        for (int j = 0; j < nperc_bins; j++){
+            high_perc_bins.push_back(params.GetFineAmplitudeCutHigh(j));
+            high_bin_cuts.push_back(params.GetFineAmplitudeBinCutHigh(j));
+            if (debug) {cout << high_perc_bins[j]*100 << "%(" << high_bin_cuts[j] << "), "; }
+        }
+        cout << '\n' << '\n';
+
+//    params.saveToCSV(nperc_bins, high_bin_cuts, low_bin_cuts, low_perc_bins, high_perc_bins, Nch_dist, params);
+    // -----**-----**-----**-----**-----**--(5)--**-----**-----**-----**-----**-----**-----**
+
+// -----------------------------------------------------
+
+void Parameterization::saveToCSV(int nperc_bins, std::vector<int> high_bin_cuts, std::vector<int> low_bin_cuts, std::vector<double> low_perc_bins, std::vector<double> high_perc_bins, TH1* Nch_dist, Parameterization params)
+    Creates event numerics .csv file to save relevant number/fractional event statistics for each centrality class.
+
+// -----------------------------------------------------
+void Parameterization::PrintFineBinCuts()
+    Prints the bin cuts
+
+// -----------------------------------------------------
+TF1* Parameterization::GetFitcs2(TGraphErrors* g)
+    N/A (doesn't get used).
+
+// -----------------------------------------------------
+

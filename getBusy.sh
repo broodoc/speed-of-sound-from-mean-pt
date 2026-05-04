@@ -1,0 +1,26 @@
+#!/bin/bash
+echo -e "\033[1;33m"
+echo "      ,gg,                                                                         ,gg,                                                     "
+echo "     i8\"\"8i                                         8I               ,dPYb,       i8\"\"8i                                                8I "
+echo "     \`8,,8'                                         8I               IP'\`Yb       \`8,,8'                                                8I "
+echo "      \`88'                                          8I               I8  8I        \`88'                                                 8I "
+echo "      dP\"8,                                         8I               I8  8'        dP\"8,                                                8I "
+echo "     dP' \`8a  gg,gggg,     ,ggg,    ,ggg,     ,gggg,8I     ,ggggg,   I8 dP        dP' \`8a    ,ggggg,   gg      gg   ,ggg,,ggg,     ,gggg,8I "
+echo "    dP'   \`Yb I8P\"  \"Yb   i8\" \"8i  i8\" \"8i   dP\"  \"Y8I    dP\"  \"Y8gggI8dP        dP'   \`Yb  dP\"  \"Y8gggI8      8I  ,8\" \"8P\" \"8,   dP\"  \"Y8I "
+echo "_ ,dP'     I8 I8'    ,8i  I8, ,8I  I8, ,8I  i8'    ,8I   i8'    ,8I  I8P     _ ,dP'     I8 i8'    ,8I  I8,    ,8I  I8   8I   8I  i8'    ,8I "
+echo "\"888,,____,dP,I8 _  ,d8'  \`YbadP'  \`YbadP' ,d8,   ,d8b, ,d8,   ,d8' ,d8b,_   \"888,,____,dP,d8,   ,d8' ,d8b,  ,d8b,,dP   8I   Yb,,d8,   ,d8b,"
+echo "a8P\"Y88888P\" PI8 YY88888P888P\"Y888888P\"Y888P\"Y8888P\"\`Y8 P\"Y8888P\"   PI8\"888  a8P\"Y88888P\" P\"Y8888P\"   8P'\"Y88P\"\`Y88P'   8I   \`Y8P\"Y8888P\"\`Y8"
+echo "              I8                                                     I8 \`8,                                                                 "
+echo "              I8                                                     I8  \`8,                  |                                  /           "
+echo "              I8                                                     I8   8I                  |                                 /           "
+echo "              I8                                                     I8   8I                  |                                /            "
+echo "              I8                                                     I8, ,8'            ⟨pₜ⟩  |                               /             "
+echo "              I8                                                      \"Y8P'                   |                              /               "
+echo "                                                                                              |       __-----____________---"
+echo "                                     Author: Caleb Broodo                                     |     /"
+echo "                                   ************************                                   |______________________________________ ⟨dN/dη⟩"
+echo -e "\033[0m"
+
+cd src/
+echo "🛠️ Initializing..."
+./run_Initialize.sh
